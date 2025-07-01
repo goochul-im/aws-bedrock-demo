@@ -93,6 +93,7 @@ export class ClaudeService {
 # 감정 카테고리 (39개)
 행복, 기쁨, 신남, 즐거움, 설렘, 유대, 신뢰, 존경, 시기, 친밀, 자신감, 서운, 평온, 안정, 편안, 소외, 불안, 실망, 기대, 속상, 상처, 감사, 무난, 차분, 긴장, 화남, 짜증, 무기력, 지침, 지루, 억울, 외로움, 우울, 공허, 초조, 부담, 어색, 불편, 불쾌
 
+
 ## 감정 강도 (emotion_intensity) 점수:
     - 기본: 4점
     - 강화 표현("너무", "정말"): +2점
@@ -145,7 +146,7 @@ export class ClaudeService {
       "peoples": [{
         "name": "관련 인물명",
         "interactions": {
-          "emotion": ["해당 인물에게 느낀 감정"],
+          "emotion": ["해당 인물에게 느낀 감정(감정 카테고리에서 선택)"],
           "emotion_intensity": [각 감정들의 강도 1-10]
         },
         "name_intimacy": "호칭 친밀도",
@@ -194,11 +195,12 @@ private resultAnalysis(result: string, ): string {
 ### 감정 수정
 감정 키워드(39개 중 선택): 행복, 기쁨, 신남, 즐거움, 설렘, 유대, 신뢰, 존경, 시기, 친밀, 자신감, 서운, 평온, 안정, 편안, 소외, 불안, 실망, 기대, 속상, 상처, 감사, 무난, 차분, 긴장, 화남, 짜증, 무기력, 지침, 지루, 억울, 외로움, 우울, 공허, 초조, 부담, 어색, 불편, 불쾌
 - 키워드 중 가장 가까운 감정으로 변환
-  예시) "그리움" → "외로움"/"사랑" → "친밀"/ "흥미" → "기대"/ "웃김"->"즐거움" / "신나다"->"신남" / "긍정"->"행복"
+  예시) "그리움" → "외로움"/"사랑" → "친밀"/ "흥미" → "기대"/ "웃김"->"즐거움" / "신나다"->"신남" / "긍정"->"행복" / "보고싶음" -> "슬픔"
 **외에 다른 카테고리 사용 절대금지**
 
 ### 문제(problem) 수정
-- situation "None"이면 problem의 모든 필드 None 
+- situation "None"이면 problem의 모든 필드 "None" 
+- approach가 "None" 이면 outcome 도 "None"
 
 ## 2. 텍스트 형식 검증 (강제 수정)
 activity/situation/cause/approach/outcome/achievements/shortcomings/tomorrow_mindset/todo 필드를 다음 규칙으로 수정:
