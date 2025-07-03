@@ -84,7 +84,7 @@ RETURN **ONLY valid JSON** that fits the schema above.
 
 ==============  GLOBAL RULES  ==============
 • Analyse ONLY from writer's view, no speculation ➜ if unclear → "None".  
-• All *_text fields* ≤14-char noun phrase, no “다” endings, no conjunctions.  
+• All *_text fields* = "**띄어쓰기 포함** 14자 이하 한국어 명사구". (예: "기술 미흡", "추가 논의", "운동 완료")
 • Self-check before output: enum match, array length sync.
 
 ==============  1. ACTIVITY  ==============
@@ -141,9 +141,26 @@ Choose ONE per activity from 24 enum, else "None".
 창의성 호기심 판단력 학습애 통찰력 용감함 끈기 정직함 활력 사랑 친절함 사회적지능 팀워크 공정함 리더십 용서 겸손 신중함 자기조절 미적감상 감사 희망 유머 None  
 
 ==============  5. PEOPLE  ==============
-Include only directly mentioned persons.  
-Clean names: remove 호칭·애칭(“준석형”→“준석”).  
-name_intimacy: 애칭1.0/친근0.9/이름0.5/성+직함0.4/거리0.2.
+  • Include only directly mentioned persons.  
+  • Remove person p if
+        p.name matches /(친구|팀원|동료|코치)$/ AND p.interactions.relation_emotion == [].
+
+  • For every person p:
+      - Keep only RELATION_EMOTION in p.interactions.relation_emotion
+      - Move SELF_EMOTION → activity.self_emotions
+      - Move STATE_EMOTION → activity.state_emotions
+
+  • For activity.self_emotions:
+      - Keep only SELF_EMOTION enum, else map or drop.
+
+  • For activity.state_emotions:
+      - Keep only STATE_EMOTION enum, else map or drop.
+
+  • After moves, if peoples == [] AND state_emotions.state_emotion == []:
+      ⇒ state_emotions.state_emotion = ["무난"]; s_emotion_intensity = [4]
+
+  • name_intimacy: 애칭1.0/친근0.9/이름0.5/성+직함0.4/거리0.2.
+
 
 Diary: ${prompt}`;
 }
@@ -191,24 +208,28 @@ C. RETURN **ONLY** the corrected JSON (no commentary)
 
 3) TEXT FORMAT  
 For activity / situation / cause / approach / outcome / achievements / shortcomings / todo:  
- - 14 자 이하 한국어 명사구  
+ - All *_text fields* = "**띄어쓰기 포함** 14자 이하 한국어 명사구". (예: "기술 미흡", "추가 논의", "운동 완료")
  - no “다” endings, no conjunctions(및·그리고·하지만…)  
 
 4) STRUCTURE  
 • 모든 *_intensity 배열 길이 == 감정 배열 길이  
 • 빈 relation/self/state 배열은 [] 유지(필드 삭제 X)  
 
-5) MIN-EMOTION CHECK
+
+5) PERSON & MIN-EMOTION CHECK
     • For each activity object:
 
-      ①  Remove every person p in peoples
-          where p.interactions.relation_emotion == [].
+      ①  Delete every person p in peoples if
+          p.name == "None" OR p.name.trim() == "".
 
-      ②  After removal, if
-          peoples == []            // 인물이 모두 사라졌고
-          AND state_emotions.state_emotion == []  // 상태 감정도 없음
+      ②  Delete every person p whose
+          p.interactions.relation_emotion == [].
+
+      ③  After the deletions, if
+          peoples == []           
+          AND state_emotions.state_emotion == []
           ⇒ set
-              state_emotions.state_emotion      = ["무난"];
+              state_emotions.state_emotion       = ["무난"];
               state_emotions.s_emotion_intensity = [4];
 
 
