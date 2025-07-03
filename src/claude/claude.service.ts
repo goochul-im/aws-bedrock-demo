@@ -110,7 +110,7 @@ NEVER use words outside each list.
 감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 시기, 질투, 분노, 실망, 짜증, 화남, 억울, 속상, 상처, 배신감, 경멸, 거부감, 무시, 불쾌  
 
 [ Self ]  
-부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자랑  
+부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자신감, 자긍심, 뿌듯함, 성취감, 만족감
 
 [ State ]  
 행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 무난, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 당황, 흥분, 졸림, 활력, 신남  
@@ -190,13 +190,13 @@ C. RETURN **ONLY** the corrected JSON (no commentary)
 • Strength  
   - 아래 24 개 enum 외 금지, 근거 부족 시 "None"  
 
-[ Relation (R, 22) ]  
+[ Relation ]  
 감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 시기, 질투, 분노, 실망, 짜증, 화남, 억울, 속상, 상처, 배신감, 경멸, 거부감, 무시, 불쾌  
 
-[ Self (S, 10) ]  
-부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자랑  
+[ Self ]  
+부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자신감, 자긍심, 뿌듯함, 성취감, 만족감
 
-[ State (T, 28) ]  
+[ State ]  
 행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 무난, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 당황, 흥분, 졸림, 활력, 신남  
 
 [ STRENGTH (24) ]  
@@ -259,7 +259,7 @@ async querySummary(prompt: string): Promise<string> {
         inferenceConfig: {
           maxTokens: 4000,
           temperature: 0.7,
-          topP: 0.9
+          topP: 0.6
         }
       }),
     });
@@ -353,7 +353,7 @@ async queryDiaryPatterns(prompt: string): Promise<any> {
         inferenceConfig: {
           maxTokens: 4000,
           temperature: 0,
-          topP: 0.9
+          topP: 0.6
         }
       }),
     });
