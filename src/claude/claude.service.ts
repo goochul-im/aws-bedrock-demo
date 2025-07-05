@@ -65,9 +65,10 @@ export class ClaudeService {
       },
       "problem": [{
         "situation": "",
-        "cause": "",
         "approach": "",
-        "outcome": ""
+        "outcome": "",
+        "decision_code" :"",
+        "conflict_response_code":""
       }],
       "strength": ""
     }
@@ -96,10 +97,11 @@ Extract ALL regardless of importance.
 Problem must occur DURING the activity.  
 Fields  
   • situation  = 부정 맥락 핵심어(어려움, 갈등, 실패, …)  
-  • cause      = 원인 행동·조건(선행)  
-  • approach   = 해결 행동(후행)  
+  • approach   = 해결 행동
   • outcome    = 현재 상태/결과  
-↳ situation="None" ⇒ 나머지 3필드도 "None".  
+  • decision_code    = CHOOSE ONE FROM enum [합리적, 직관적, 의존적, 회피적, 충동적]
+  • conflict_response_code    =   CHOOSE ONE FROM enum [회피형, 경쟁형, 타협형, 수용형, 협력형형]
+↳ situation="None" ⇒ 나머지 4필드도 "None".  
 ↳ approach="None"  ⇒ outcome="None".
 
 ==============  3. EMOTIONS  ==============
@@ -107,13 +109,13 @@ Relation(22) ↔ 특정 인물, Self(10) ↔ 자기평가, State(28) ↔ 대상 
 NEVER use words outside each list.
 
 [ Relation ]  
-감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 시기, 질투, 분노, 실망, 짜증, 화남, 억울, 속상, 상처, 배신감, 경멸, 거부감, 무시, 불쾌  
+감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 질투, 시기, 분노, 짜증, 실망, 억울, 속상, 상처, 배신감, 경멸, 거부감, 불쾌
 
 [ Self ]  
-부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자신감, 자긍심, 뿌듯함, 성취감, 만족감
+자긍심, 자신감, 뿌듯함, 성취감, 만족감, 부끄러움, 수치, 죄책감, 후회, 뉘우침, 창피, 굴욕
 
 [ State ]  
-행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 무난, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 당황, 흥분, 졸림, 활력, 신남  
+행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 흥분, 활력 
 
 Intensity = base 4 → +2 (“너무 / 정말 / 매우”)  
                - 2 (“조금 / 약간 / 살짝”)  
@@ -189,18 +191,28 @@ C. RETURN **ONLY** the corrected JSON (no commentary)
   - enum 밖 단어 → 가장 근접 enum, 없으면 "None"  
 • Strength  
   - 아래 24 개 enum 외 금지, 근거 부족 시 "None"  
-
+• decision_code  
+  - 아래 5 개 enum 외 금지, 근거 부족 시 "None"  
+• conflict_response_code  
+  - 아래 24 개 enum 외 금지, 근거 부족 시 "None"  
+  
 [ Relation ]  
-감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 시기, 질투, 분노, 실망, 짜증, 화남, 억울, 속상, 상처, 배신감, 경멸, 거부감, 무시, 불쾌  
+감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 질투, 시기, 분노, 짜증, 실망, 억울, 속상, 상처, 배신감, 경멸, 거부감, 불쾌
 
 [ Self ]  
-부끄러움, 수치, 미안함, 죄책감, 후회, 뉘우침, 창피, 당혹, 굴욕, 자신감, 자긍심, 뿌듯함, 성취감, 만족감
+자긍심, 자신감, 뿌듯함, 성취감, 만족감, 부끄러움, 수치, 죄책감, 후회, 뉘우침, 창피, 굴욕
 
 [ State ]  
-행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 무난, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 당황, 흥분, 졸림, 활력, 신남  
+행복, 기쁨, 즐거움, 설렘, 평온, 편안, 안정, 차분, 기대, 긴장, 불안, 초조, 부담, 피로, 지침, 무기력, 지루, 공허, 외로움, 우울, 슬픔, 놀람, 흥분, 활력 
 
 [ STRENGTH (24) ]  
-창의성, 호기심, 판단력, 학습애, 통찰력, 용감함, 끈기, 정직함, 활력, 사랑, 친절함, 사회적지능, 팀워크, 공정함, 리더십, 용서, 겸손, 신중함, 자기조절, 미적감상, 감사, 희망, 유머, None  
+창의성, 호기심, 판단력, 학습애, 통찰력, 용감함, 끈기, 정직함, 활력, 사랑, 친절함, 사회적지능, 팀워크, 공정함, 리더십, 용서, 겸손, 신중함, 자기조절, 미적감상, 감사, 희망, 유머, None 
+
+[ decision_code ]
+합리적, 직관적, 의존적, 회피적, 충동적
+
+[ conflict_response_code ]
+회피형, 경쟁형, 타협형, 수용형, 협력형
 
 2) PROBLEM LOGIC  
 • situation="None" → cause·approach·outcome 모두 "None"  
