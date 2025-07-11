@@ -33,6 +33,15 @@ export class ClaudeService {
     rule6: '프롬프트를 따라라. '
   };
 
+
+  private TitlePrompt(prompt: string): string {
+    return `
+    다음 일기 내용을 읽고 실제 사람이 작성할 법한 제목을 작성하고 해당 제목만 출력하라.
+
+    일기 내용: ${prompt}
+  `
+  }
+  
   private preprocessPrompt(prompt: string): string {
     return `${this.promptRules.rules} ${this.promptRules.rule1} ${this.promptRules.rule2} ${this.promptRules.rule3} ${this.promptRules.rule4} ${this.promptRules.rule5}, 일기: ${prompt}`;
   }
@@ -278,9 +287,6 @@ private ActionAnalysis (prompt: string): string {
 
 
 async querySummary(prompt: string): Promise<any> {
-  if (await this.isGibberish(prompt)) {
-    return "의미 없는 입력입니다.";
-  }
   try {
     const processedPrompt = this.summaryPrompt(prompt);
 
@@ -413,4 +419,46 @@ async queryDiaryPatterns(prompt: string): Promise<any> {
     throw new Error(`Pattern analysis failed: ${error.message}`);
   }
 }
+
+  // 루틴 추출 메서드 
+  async Routine(prompt: string): Promise<any> {
+    // if(!isValidDiary(prompt)) return "잘못된 일기";
+    
+    try {
+      const processedPrompt = this.ActionAnalysis(prompt);
+      
+      const command = new InvokeModelCommand({
+        modelId: 'apac.amazon.nova-pro-v1:0',
+        contentType: 'application/json',
+        accept: 'application/json',
+        body: JSON.stringify({
+          messages: [
+            { role: 'user', content: [{ text: processedPrompt }] }
+          ],
+          inferenceConfig: {
+            maxTokens: 4000,
+            temperature: 0.8,
+            topP: 0.7
+          }
+        }),
+      });
+      
+      const response = await this.client.send(command);
+      const body = await response.body.transformToString();
+      const parsed = JSON.parse(body);
+      
+      let responseText = parsed?.output?.message?.content?.[0]?.text || 'No response';
+      
+      
+      if (!responseText) {
+        throw new Error('No response text received');
+      }
+
+      return responseText;
+
+    } catch (error) {
+      console.error('Error in queryDiaryPatterns:', error);
+      throw new Error(`Pattern analysis failed: ${error.message}`);
+    }
+  }
 }

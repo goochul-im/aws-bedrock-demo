@@ -1,5 +1,18 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { ClaudeService } from './claude.service';
+
+interface DetectGibberishRequest {
+  text: string;
+}
+
+interface DetectGibberishResponse {
+  text: string;
+  prediction: string;
+  confidence: number;
+  is_clean: boolean;
+}
+
+
 
 @Controller('claude')
 export class ClaudeController {
@@ -26,4 +39,14 @@ export class ClaudeController {
       throw new Error(`Detail analysis failed: ${error.message}`);
     }
   }
+  @Post('routine')
+  async askRoutine(@Body('prompt') prompt: string) {
+    try {
+      const response = await this.claudeService.Routine(prompt);
+      return { response };
+    } catch (error) {
+      throw new Error(`Routine analysis failed: ${error.message}`);
+    }
+  }
+
 }
