@@ -254,9 +254,33 @@ Diary Analysis Results: ${result} `
 }
 
 
+private ActionAnalysis (prompt: string): string {
+  return `
+  당신은 일기를 분석하여 사용자가 우울, 분노, 또는 긴장을 어떤 행동을 통해 해소했는지 찾아내는 어시스턴트이다.
+
+  1. 감정 해소와 관련된 **행동의 목적과 기능**을 분석하고, 단순한 사물이나 장소가 아닌 **"행동의 핵심 원리"**를 추출하라.
+  2. 예를 들어 '핸드드라이어 소리를 들으며 멍하니 있었다'의 출력은 '핸드드라이어'가 아니라 "강한 소음으로 감각 차단"이어야 한다.
+  3. 각 감정을 해소한 직접적인 행동이 없다면, 절대 추측하지 말고 "None"으로 출력하라.
+  4. 출력은 json 형식이며, 각 값은 **20자 이하의 한국어 명사구**로 하되, **단어가 아니라 기능 중심으로 요약**하라.
+  5. 출력 형태는 "~하기" 와 같은 형태로 하라.
+
+  다음 형식을 지켜라. json 외 다른 설명은 하지 말고 출력하라.
+
+  {
+  "depression": "",
+  "anger": "",
+  "nervous": ""
+  }
+
+  일기: ${prompt}
+`
+}
 
 
-async querySummary(prompt: string): Promise<string> {
+async querySummary(prompt: string): Promise<any> {
+  if (await this.isGibberish(prompt)) {
+    return "의미 없는 입력입니다.";
+  }
   try {
     const processedPrompt = this.summaryPrompt(prompt);
 
