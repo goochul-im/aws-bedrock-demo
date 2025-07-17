@@ -94,7 +94,7 @@ RETURN **ONLY valid JSON** that fits the schema above.
 
 ==============  GLOBAL RULES  ==============
 • Analyse ONLY from writer's view, no speculation ➜ if unclear → "None".  
-• All *_text fields* = "**띄어쓰기 포함** 14자 이하 한국어 명사구". (예: "기술 미흡", "추가 논의", "운동 완료")
+• All *_text fields* = "Korean noun phrases of 14 characters or less including spaces". (예: "기술 미흡", "추가 논의", "운동 완료")
 • Self-check before output: enum match, array length sync.
 
 ==============  1. ACTIVITY  ==============
@@ -152,7 +152,9 @@ Choose ONE per activity from 24 enum, else "None".
 창의성 호기심 판단력 학습애 통찰력 용감함 끈기 정직함 활력 사랑 친절함 사회적지능 팀워크 공정함 리더십 용서 겸손 신중함 자기조절 미적감상 감사 희망 유머 None  
 
 ==============  5. PEOPLE  ==============
-  • Include only directly mentioned persons.  
+  • Include only directly mentioned persons.
+  • unclear 묘사(“모자 쓴 분”) 삭제  
+  • remove 호칭·애칭(“민수형”→“민수”, “도영이”→“도영”)    
   • Remove person p if
         p.name matches /(친구|팀원|동료|코치)$/ AND p.interactions.relation_emotion == [].
 
@@ -265,32 +267,37 @@ Diary Analysis Results: ${result} `
 
 private ActionAnalysis (prompt: string): string {
   return `
-  당신은 일기를 분석하여 사용자가 우울, 분노, 또는 긴장을 어떤 행동을 통해 해소했는지 찾아내는 어시스턴트이다.
+    당신은 일기를 분석하여 사용자가 **부정적인 감정(우울, 분노, 혼란, 긴장 등)**을 느꼈을 때,  
+    그 감정을 **주체적인 행동을 통해 실질적으로 완화했는지** 판단하고, 그 **해소 행동만** 추출하는 어시스턴트이다.
 
-  A. 감정 조건
-    - 단순한 감정 표현(예: 울기, 짜증내기, 불안 느끼기)는 해소가 아니다.
-    - 감정이 해소되었는지 반드시 **그 결과가 글에 직접 묘사되어야 하며**, 해소되지 않은 감정 상태는 절대 출력하지 말 것.
-    - 긴장은 신체적인 긴장이 아니라 감정적 긴장만 포함한다.
-    
-  B. 행동 조건
-   - 감정 해소와 관련된 **주체적이고 의도적인 행동**만 추출하라.
-    - 단순히 감정을 느낀 것, 타인에게 영향을 받은 것(예: 친구가 위로함)은 모두 제외하고 "None"으로 출력하라.
-    - 행동은 **사물, 장소, 감정 표현**이 아니라 **감정을 완화한 심리적 기능 중심**으로 요약하라.
-    - 예를 들어 ‘생각을 멈추기 위해 강한 소음 속에 있었음’ → “소음으로 감각 차단하기”
+    ---
 
-    C. 출력 조건
-    - 각 감정을 해소한 직접적이고 주체적인 행동이 없는 경우, 절대 추측하지 말고 반드시 "None"으로 출력하라.
-    - 출력은 JSON 형식이며, 각 값은 **20자 이하의 한국어 명사구**로 하되, **"~하기"/"~기" 형식**으로 작성하라.
+    A. 감정 조건  
+    - 감정이 해소된 경우만 추출하며, **감정의 완화 결과가 서술된 경우에만 포함**한다.  
+    - 감정을 해소하지 못했거나, 감정 해소 여부가 서술되지 않은 경우는 무시한다.  
+    - 단순히 감정을 느낀 것, 표현한 것(예: 짜증 냈다, 힘들었다)은 모두 제외한다.
 
-  다음 형식을 지켜라. json 외 다른 설명은 하지 말고 출력하라.
+    B. 행동 조건  
+    - 오직 **감정 해소를 목적으로 하며**, 그 효과가 명확히 드러나는 **주체적인 행동**만 포함한다.
+    - 예를 들어 "친구와 1on1 대화를 나눈 후 속이 편안해졌다" → 포함  
+    - "멘토링을 받았다"나 "책을 읽었다"처럼 단순한 활동 나열은 제외  
+    - **행동 이후 감정의 변화가 명시되지 않은 경우는 절대 포함하지 말 것**
 
-  {
-  "depression": "",
-  "anger": "",
-  "nervous": ""
-  }
+    C. 표현 조건  
+    - 출력은 json 형식이며, 최대 3개까지만 추출하라.  
+    - 각 항목은 **20자 이하의 한국어 명사구**로, **"~하기"/"~기"** 형식으로 작성할 것.  
+    - 단순 명사는 금지. "운동" 대신 "운동으로 긴장 해소하기"와 같은 방식은 허용되지 않음.  
+    - 반드시 심리적 기능 중심으로 요약할 것. 예: "1on1 대화로 감정 정리하기"
 
-  일기: ${prompt}
+    ---
+
+    다음 형식으로 json만 출력하라. 설명은 생략하라.
+
+    {
+      "coping": [""]
+    }
+
+    일기: ${prompt}
 `
 }
 
@@ -363,65 +370,63 @@ async queryDiaryPatterns(prompt: string): Promise<any> {
 
     const processedPrompt = this.patternAnalysisPrompt(prompt);
 
-    const command = new InvokeModelCommand({
-      modelId: 'apac.amazon.nova-pro-v1:0',
-      contentType: 'application/json',
-      accept: 'application/json',
-      body: JSON.stringify({
-        messages: [
-          { role: 'user', content: [{ text: processedPrompt }] }
-        ],
-        inferenceConfig: {
-          maxTokens: 4000,
-          temperature: 0,
-          topP: 0.9
-        }
-      }),
-    });
+  const command = new InvokeModelCommand({
+    modelId: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
+    contentType: 'application/json',
+    accept: 'application/json',
+    body: JSON.stringify({
+      anthropic_version: "bedrock-2023-05-31",
+      max_tokens: 4000,
+      temperature: 0,
+      top_p: 0.9,
+      messages: [
+        { role: 'user', content: processedPrompt }
+      ]
+    }),
+  });
 
-    const response = await this.client.send(command);
-    const body = await response.body.transformToString();
-    const parsed = JSON.parse(body);
+  const response = await this.client.send(command);
+  const body = await response.body.transformToString();
+  const parsed = JSON.parse(body);
 
-    let responseText = parsed?.output?.message?.content?.[0]?.text || 'No response';
-    
-    
-    if (!responseText) {
-      throw new Error('No response text received');
-    }
-    
+  let responseText = parsed?.content?.[0]?.text || 'No response';
+
+  if (!responseText) {
+    throw new Error('No response text received');
+  }
+
 
     // console.log("before: ", responseText);
-    const checkPrompt = this.resultAnalysis(responseText)
-    const checkCommand = new InvokeModelCommand({
-      modelId: 'apac.amazon.nova-pro-v1:0',
-      contentType: 'application/json',
-      accept: 'application/json',
-      body: JSON.stringify({
-        messages: [
-          { role: 'user', content: [{ text: checkPrompt }] }
-        ],
-        inferenceConfig: {
-          maxTokens: 4000,
-          temperature: 0,
-          topP: 0.6
-        }
-      }),
-    });
+    // const checkPrompt = this.resultAnalysis(responseText)
+    // const checkCommand = new InvokeModelCommand({
+    //   modelId: 'anthropic.claude-3-haiku-20240307-v1:0',
+    //   contentType: 'application/json',
+    //   accept: 'application/json',
+    //   body: JSON.stringify({
+    //     anthropic_version: "bedrock-2023-05-31",
+    //     max_tokens: 4000,
+    //     temperature: 0,
+    //     top_p: 0.6,
+    //     messages: [
+    //       { role: 'user', content: checkPrompt }
+    //     ]
+    //   }),
+    // });
 
-    const checkedResponse = await this.client.send(checkCommand);
-    const checkedBody = await checkedResponse.body.transformToString();
-    const checkedParsed = JSON.parse(checkedBody);
+    // const checkedResponse = await this.client.send(checkCommand);
+    // const checkedBody = await checkedResponse.body.transformToString();
+    // const checkedParsed = JSON.parse(checkedBody);
 
-    let finalResult = checkedParsed?.output?.message?.content?.[0]?.text || 'No response';
+    // let finalResult = checkedParsed?.content?.[0]?.text || 'No response';
+
     
     
-    if (!finalResult) {
-      throw new Error('No response text received');
-    }
+    // if (!finalResult) {
+    //   throw new Error('No response text received');
+    // }
 
-    console.log(finalResult);
-    return finalResult;
+    console.log(responseText);
+    return responseText;
 
   } catch (error) {
     console.error('Error in queryDiaryPatterns:', error);
