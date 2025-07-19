@@ -22,6 +22,7 @@ export class ClaudeService {
     });
   }
 
+
   private readonly promptRules = {
     rules: '다음 규칙을 준수하여 답변을 해줘.',
     rule1: '1. 일기에서 나오는 인물이나 장소 + 내가 그 인물이나 장소에 느끼거나 받은 감정을 추출한다. 인물이나 장소 이외의 다른 것은 절대 추출하지 말 것',
@@ -98,7 +99,7 @@ RETURN **ONLY valid JSON** that fits the schema above.
 • Self-check before output: enum match, array length sync.
 
 ==============  1. ACTIVITY  ==============
-Definition = Actions performed by the author (excluding intentions and plans).
+Definition = Actions performed by the author (including intentions and plans).
 Extract ALL regardless of importance.  
 예: 일하다·회의하다·수영·요리·대화 등.
 Without specific actions, activity_analysis = []
@@ -117,6 +118,7 @@ Fields
 ==============  3. EMOTIONS  ==============
 Relation(22) ↔ 특정 인물, Self(10) ↔ 자기평가, State(28) ↔ 대상 없음.  
 NEVER use words outside each list.
+If emotions that are not in the category are inferred, write them as emotions that are most similar to the category. example, "그리움"->"애정"
 
 [ Relation ]  
 감사, 존경, 신뢰, 애정, 친밀, 유대, 사랑, 공감, 질투, 시기, 분노, 짜증, 실망, 억울, 속상, 상처, 배신감, 경멸, 거부감, 불쾌
@@ -144,8 +146,6 @@ example:
   - peoples.interactions.relation_emotion OR
   - state_emotions.state_emotion
   둘 중 하나 이상에 최소 1개 감정을 기록해야 한다.
-• diary 본문에서 해당 활동에 감정 표현이 전혀 없으면
-  state_emotions.state_emotion := ["무난"];  intensity := [4].
 • relation_emotion이 비어 있으면 해당 person 객체 삭제.
 
 ==============  4. STRENGTH  ==============
