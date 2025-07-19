@@ -98,9 +98,10 @@ RETURN **ONLY valid JSON** that fits the schema above.
 • Self-check before output: enum match, array length sync.
 
 ==============  1. ACTIVITY  ==============
-Definition = 작성자가 실재로 수행한 행위(의도·계획 제외).  
+Definition = Actions performed by the author (excluding intentions and plans).
 Extract ALL regardless of importance.  
 예: 일하다·회의하다·수영·요리·대화 등.
+Without specific actions, activity_analysis = []
 
 ==============  2. PROBLEM  ==============
 Problem must occur DURING the activity.  
@@ -174,6 +175,12 @@ Choose ONE per activity from 24 enum, else "None".
 
   • name_intimacy: 애칭1.0/친근0.9/이름0.5/성+직함0.4/거리0.2.
 
+============== CASE : NO ACTIVITY  ==============
+**If there is no specific action at all:**:
+- activity_analysis = []
+- All emotions and thoughts move to reflection
+- Record internal conflicts/concerns in shortcomings
+- Record action plans in todo
 
 Diary: ${prompt}`;
 }
